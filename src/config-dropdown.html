@@ -1,0 +1,77 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../polymerfire/firebase-query.html">
+<link rel="import" href="../../px-dropdown/px-dropdown.html">
+
+<dom-module id="config-dropdown">
+  <template>
+
+    <px-dropdown
+      id="dropdownConfigs"
+      items="[[_configNames]]"
+      select-by="key"
+      selected="{{currentConfIndex}}">
+    </px-dropdown>
+    <firebase-query
+      id="query"
+      app-name="benchmark"
+      path="/configs"
+      data="{{allConfigs}}"
+    ></firebase-query>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'config-dropdown',
+
+      properties: {
+        allConfigs: {
+          type: Object,
+          notify: true
+        },
+        currentConfIndex: {
+          type: Number,
+          notify: true
+        },
+        currentConfig: {
+          type: Object,
+          notify: true,
+          computed: '_computeCurrentConfig(currentConfIndex, allConfigs)'
+        },
+        _configNames: {
+          type: Array
+        }
+      },
+
+      observers: [
+        '_setupConfigs(allConfigs)'
+      ],
+
+      _setupConfigs() {
+
+        this.set('_configNames', this.allConfigs.map(function(item) {return item.name}));
+
+        //select default config
+        var defaultIndex = this.allConfigs.findIndex(function(item) {
+          return item.default;
+        });
+
+        this.set('currentConfIndex', defaultIndex);
+      },
+
+      _computeCurrentConfig() {
+        return this.allConfigs[this.currentConfIndex];
+      }
+    });
+
+  </script>
+</dom-module>

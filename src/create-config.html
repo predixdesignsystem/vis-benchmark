@@ -1,0 +1,188 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../px-alert-message/px-alert-message.html">
+<link rel="import" href="../../polymerfire/firebase-document.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../css/create-config-styles.html">
+
+<dom-module id="create-config">
+  <template>
+    <style include="create-config-styles"></style>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="card">
+      <h1>Creating benchmark configuration</h1>
+      <p>Create and save a benchmark configuration that can then be used anywhere by anyone</p>
+
+      <form>
+          <px-alert-message
+            id="alert"
+            disable-auto-show
+            hide-badge
+            type="[[messageType]]"
+            action="dismiss"
+            message-title="[[messageTitle]]"
+            message="[[message]]"
+            auto-dismiss="2500">
+          </px-alert-message>
+
+        <fieldset class="form-field" >
+          <div class="form-field">
+            <input class="text-input input--regular" id="name" type="text" placeholder="Benchmark name">
+            <button class="btn btn--primary"  type="button" on-tap="save">Save</button>
+          </div>
+          <div class="form-field">
+            <input id="checkboxDefault" type="checkbox">
+            <label class="label--inline" for="checkboxDefault">Make default</label>
+          </div>
+          <div class="form-field">
+            <input id="checkboxWarmup" type="checkbox">
+            <label class="label--inline" for="checkboxWarmup">Include benchmark warmup</label>
+          </div>
+          <div class="form-field">
+            <textarea id="text"></textarea>
+          </div>
+
+        </fieldset>
+      </form>
+
+      <firebase-document
+        id="document"
+        app-name="benchmark"
+        path="configs/"
+        >
+      </firebase-document>
+
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'create-config',
+      properties: {
+          newConfig: {
+            type: Array,
+            value: function() {
+              return [{
+                numberOfCharts: 10,
+                chartType: 'px-vis-timeseries',
+                dataset: 'medium',
+                title: '10 TS 4x1k',
+                description: '10 timeseries charts, 4 series with each 1000 points. Canvas',
+                options: {
+                  canvas: true
+                }
+              }, {
+                numberOfCharts: 10,
+                chartType: 'px-vis-xy-chart',
+                dataset: 'medium',
+                title: '10 XY 4x1k',
+                description: '10 xy charts, 4 series with each 1000 points. Canvas',
+                options: {
+                  canvas: true
+                }
+              }];
+            }
+          },
+          message: {
+            type: String
+          },
+          messageTitle: {
+            type: String
+          },
+          messageType: {
+            type: String,
+            value: 'information'
+          }
+        },
+
+      attached() {
+        this.$.text.value = JSON.stringify(this.newConfig, null, 2);
+      },
+
+      _dummy() {
+        console.log('dummy')
+      },
+
+      async save() {
+        var name = this.$.name.value,
+            benchConf;
+
+        if(name) {
+
+          benchConf = this._createConfig();
+
+          if(benchConf.default) {
+
+             //make all other configs non default
+            await this._resetDefaultStateInDb();
+          }
+
+          this._saveConfInDb(benchConf);
+
+        } else {
+          this.messageType = 'important';
+          this.message = 'please fill in "Name"';
+          this.messageTitle = 'Missing field';
+          this.$.alert.set('visible', true);
+        }
+      },
+
+      _saveConfInDb(benchConf) {
+        this.$.document.setStoredValue('configs/' + benchConf.name, benchConf)
+            .then(function() {
+            this.messageType = 'information';
+            this.message = 'benchmark ' + this.$.name.value + ' successfully saved';
+            this.messageTitle = 'Success';
+            this.$.alert.set('visible', true);
+            }.bind(this))
+            .catch(function(e) {
+            this.messageType = 'important';
+            this.message = 'error while saving benchmark ' + this.$.name.value;
+            this.messageTitle = 'Error';
+            this.$.alert.set('visible', true);
+            }.bind(this));
+      },
+
+      async _resetDefaultStateInDb() {
+
+        var configs = await this.$.document.getStoredValue('configs'),
+            keys = Object.keys(configs);
+
+        for(var i=0; i<keys.length; i++) {
+          configs[keys[i]].default = false;
+        }
+
+        await this.$.document.setStoredValue('configs', configs);
+      },
+
+      _createConfig() {
+        var result = {};
+
+        result.name = this.$.name.value;
+        result.warmup = this.$.checkboxWarmup.checked;
+        result.default = this.$.checkboxDefault.checked;
+        result.config = JSON.parse(this.$.text.value);
+
+        return result;
+      }
+
+
+});
+  </script>
+</dom-module>

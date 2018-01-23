@@ -1,0 +1,183 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../px-vis-demos/px-vis-benchmark.html">
+<link rel="import" href="../../polymerfire/firebase-document.html">
+<link rel="import" href="config-dropdown.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../css/run-benchmark-styles.html">
+
+<dom-module id="run-benchmark">
+  <template>
+    <style include="run-benchmark-styles"></style>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="card">
+      <h1>Run Benchmark</h1>
+      <config-dropdown
+        current-config="{{currentConfig}}">
+      </config-dropdown>
+      <br>
+      <input type="button" class="btn btn--primary" value="Start" on-tap="_startBench">
+      <template is="dom-if" if="[[benchHasResults]]">
+        <input type="button" class$="btn btn--primary [[_buttonEnabled(_canUpload)]]" value="Upload results" on-tap="_uploadResults">
+      </template>
+      <px-vis-benchmark
+        id="benchmark"
+        hide-ui
+        contexts="[[contexts]]"
+        data-root-path="../px-vis-demos/benchmark_data/"
+        has-results="{{benchHasResults}}"
+        is-running="{{benchIsRunning}}"
+      >
+      </px-vis-benchmark>
+      <firebase-document
+        id="document"
+        app-name="benchmark"
+        path="results/"
+      ></firebase-document>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'run-benchmark',
+
+      properties: {
+        resultStorePath: String,
+        currentConfig: {
+          type: Object
+        },
+        contexts: {
+          type: Array
+        },
+        benchHasResults: {
+          type: Boolean,
+          value: false
+        },
+        benchIsRunning: {
+          type: Boolean,
+          value: false
+        },
+        _hasUploaded: {
+          type: Boolean,
+          value: true
+        },
+        _canUpload: {
+          type: Boolean,
+          computed: '_computeCanUpload(benchIsRunning, _hasUploaded, benchHasResults)'
+        }
+      },
+
+      observers: [
+        '_currentConfChanged(currentConfig)',
+        '_isRunningChanged(benchIsRunning)'
+      ],
+
+      _startBench() {
+        this.$.benchmark._start();
+      },
+
+      _currentConfChanged() {
+        var result = [],
+            newConf,
+            keys;
+
+        if(this.currentConfig.warmup) {
+          result = this.$.benchmark.buildWarmupContext();
+        }
+
+        this.currentConfig.config.forEach(function(conf, i) {
+
+          newConf = this.$.benchmark.createContext(conf.numberOfCharts, conf.chartType, conf.dataset, conf.title, conf.description);
+          newConf.options = this.$.benchmark._chartOptions;
+
+          //make sure we copy the options keys that have been defined
+          if(newConf.options) {
+            keys = Object.keys(conf.options);
+
+            for(var i=0; i<keys.length; i++) {
+              newConf.options[keys[i]] =conf.options[keys[i]];
+            }
+          }
+          result.push(newConf);
+        }.bind(this));
+
+        this.set('contexts', result);
+      },
+
+      _uploadResults() {
+
+        let result = [],
+            current;
+
+        //create data object
+        for(var i=0; i<this.$.benchmark.reportData.length; i++) {
+
+          current = {};
+          current.meta = this.$.benchmark.perfResult[i].loopInfo;
+          current.meta.ctx.data = this.$.benchmark.getDatasetSize(current.meta.ctx.data.data);
+          current.timings = this.$.benchmark.reportData[i].tableData;
+          result.push(current);
+        }
+
+        //add some more info
+        result.timestamp = this._currentBenchmarkTimestamp;
+        result.polymerVersion = Polymer.version;
+        result.visVersion = Px.vis.debug.version;
+        result.benchmarkName = this.currentConfig.name;
+        // result.user = this.user
+
+        if(this.user) {
+          //change path
+        }
+
+        this.$.document.setStoredValue('results/' + result.benchmarkName + '/' + result.timestamp, result)
+            .then(function() {
+            this._hasUploaded = true;
+            // this.messageType = 'information';
+            // this.message = 'benchmark ' + this.$.name.value + ' successfully saved';
+            // this.messageTitle = 'Success';
+            // this.$.alert.set('visible', true);
+            }.bind(this))
+            .catch(function(e) {
+            // this.messageType = 'important';
+            // this.message = 'error while saving benchmark ' + this.$.name.value;
+            // this.messageTitle = 'Error';
+            // this.$.alert.set('visible', true);
+            }.bind(this));
+      },
+
+      _isRunningChanged() {
+        if(!this.benchIsRunning) {
+          this._currentBenchmarkTimestamp = Number(new Date().getTime());
+        } else {
+          this._hasUploaded = false;
+        }
+      },
+
+      _computeCanUpload() {
+        return !this.benchIsRunning && !this._hasUploaded && this.benchHasResults;
+      },
+
+      _buttonEnabled(bool) {
+        return bool ? '' : 'btn--disabled';
+      }
+    });
+
+  </script>
+</dom-module>
