@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../px-alert-message/px-alert-message.html">
 <link rel="import" href="../../polymerfire/firebase-document.html">
+<link rel="import" href="config-dropdown.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="../css/create-config-styles.html">
 
@@ -29,6 +30,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <h1>Creating benchmark configuration</h1>
       <p>Create and save a benchmark configuration that can then be used anywhere by anyone</p>
 
+      <div class="flex u-mb">
+        <config-dropdown
+          current-config="{{dropdownConfig}}">
+        </config-dropdown>
+        <button class="btn u-ml-"  type="button" on-tap="_loadConfFromDropdown">Load existing config</button>
+      </div>
       <form>
           <px-alert-message
             id="alert"
@@ -75,6 +82,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'create-config',
       properties: {
+          dropdownConfig: {
+            type: Object
+          },
+          /**
+           * the config being currently edited by the user
+           */
+          currentConfig: {
+            type:Object,
+            value: function() {
+              return {
+                name: '',
+                default: false,
+                warmup: false,
+
+              }
+            }
+          },
           newConfig: {
             type: Array,
             value: function() {
@@ -180,9 +204,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         result.config = JSON.parse(this.$.text.value);
 
         return result;
+      },
+
+      _loadConfFromDropdown() {
+
+        this.$.name.value = this.dropdownConfig.name;
+        this.$.checkboxWarmup.checked = this.dropdownConfig.warmup;
+        this.$.checkboxDefault.checked = this.dropdownConfig.default;
+        this.$.text.value = JSON.stringify(this.dropdownConfig.config, null, 2);
       }
-
-
 });
   </script>
 </dom-module>
