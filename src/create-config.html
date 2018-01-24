@@ -32,6 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <div class="flex u-mb">
         <config-dropdown
+          id="dropdownConfig"
           current-config="{{dropdownConfig}}">
         </config-dropdown>
         <button class="btn u-ml-"  type="button" on-tap="_loadConfFromDropdown">Load existing config</button>
@@ -52,6 +53,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <div class="form-field">
             <input class="text-input input--regular" id="name" type="text" placeholder="Benchmark name">
             <button class="btn btn--primary"  type="button" on-tap="save">Save</button>
+            <button class$="btn" type="button" on-tap="deleteConf">Delete</button>
           </div>
           <div class="form-field">
             <input id="checkboxDefault" type="checkbox">
@@ -174,6 +176,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.message = 'benchmark ' + this.$.name.value + ' successfully saved';
             this.messageTitle = 'Success';
             this.$.alert.set('visible', true);
+            this.$.dropdownConfig.forceRefetch();
             }.bind(this))
             .catch(function(e) {
             this.messageType = 'important';
@@ -212,6 +215,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.checkboxWarmup.checked = this.dropdownConfig.warmup;
         this.$.checkboxDefault.checked = this.dropdownConfig.default;
         this.$.text.value = JSON.stringify(this.dropdownConfig.config, null, 2);
+      },
+
+      deleteConf() {
+        this.$.document.setStoredValue('configs/' + this.$.name.value, null)
+            .then(function() {
+            this.messageType = 'information';
+            this.message = 'benchmark ' + this.$.name.value + ' successfully deleted';
+            this.messageTitle = 'Success';
+            this.$.alert.set('visible', true);
+            this.$.dropdownConfig.forceRefetch();
+            }.bind(this))
+            .catch(function(e) {
+            this.messageType = 'important';
+            this.message = 'error while deleting benchmark ' + this.$.name.value;
+            this.messageTitle = 'Error';
+            this.$.alert.set('visible', true);
+            }.bind(this));
       }
 });
   </script>
