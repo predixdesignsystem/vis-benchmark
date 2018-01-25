@@ -19,7 +19,8 @@
     "chimera-table": "vaadin/px-data-grid#^1.1.0",
     "polymerfire": "^2.2.1",
     "px-alert-message": "^1.2.0",
-    "px-dropdown": "^4.4.0"
+    "px-dropdown": "^4.4.0",
+    "px-tabs": "^2.1.0"
   },
   "devDependencies": {
     "px-theme": "^3.0.0",

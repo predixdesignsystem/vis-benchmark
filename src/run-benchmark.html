@@ -48,7 +48,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <firebase-document
         id="document"
         app-name="benchmark"
-        path="results/"
+        path="results"
       ></firebase-document>
     </div>
   </template>
@@ -80,7 +80,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         _canUpload: {
           type: Boolean,
           computed: '_computeCanUpload(benchIsRunning, _hasUploaded, benchHasResults)'
-        }
+        },
+        polymerVersions: {
+          type: Array,
+          notify: true
+        },
+        user: Object,
+        signedIn: Boolean
       },
 
       observers: [
@@ -123,14 +129,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _uploadResults() {
 
         let result = [],
-            current;
+            current,
+            path = 'results/';
 
         //create data object
         for(var i=0; i<this.$.benchmark.reportData.length; i++) {
 
           current = {};
           current.meta = this.$.benchmark.perfResult[i].loopInfo;
-          current.meta.ctx.data = this.$.benchmark.getDatasetSize(current.meta.ctx.data.data);
+          if(Array.isArray(current.meta.ctx.data.data)) {
+            current.meta.ctx.data = this.$.benchmark.getDatasetSize(current.meta.ctx.data.data);
+          } else {
+            current.meta.ctx.data = current.meta.ctx.data;
+          }
           current.timings = this.$.benchmark.reportData[i].tableData;
           result.push(current);
         }
@@ -140,26 +151,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         result.polymerVersion = Polymer.version;
         result.visVersion = Px.vis.debug.version;
         result.benchmarkName = this.currentConfig.name;
-        // result.user = this.user
+        result.browser = this._getBrowserName();
+        result.userName = this.user ? this.user.displayName : 'anonymous';
 
-        if(this.user) {
-          //change path
-        }
+        var newRef = this.$.document.ref.push();
+        newRef.set(result, function() {
+          this._hasUploaded = true;
 
-        this.$.document.setStoredValue('results/' + result.benchmarkName + '/' + result.timestamp, result)
-            .then(function() {
-            this._hasUploaded = true;
-            // this.messageType = 'information';
-            // this.message = 'benchmark ' + this.$.name.value + ' successfully saved';
-            // this.messageTitle = 'Success';
-            // this.$.alert.set('visible', true);
-            }.bind(this))
-            .catch(function(e) {
-            // this.messageType = 'important';
-            // this.message = 'error while saving benchmark ' + this.$.name.value;
-            // this.messageTitle = 'Error';
-            // this.$.alert.set('visible', true);
-            }.bind(this));
+          //if we never used this polymer version before => store it
+          if(!Array.isArray(this.polymerVersions)) {
+            this.set('polymerVersions', [result.polymerVersion]);
+          } else if(this.polymerVersions.indexOf(result.polymerVersion) === -1) {
+            this.push('polymerVersions', result.polymerVersion);
+          }
+        }.bind(this));
       },
 
       _isRunningChanged() {
@@ -176,6 +181,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _buttonEnabled(bool) {
         return bool ? '' : 'btn--disabled';
+      },
+
+      _getBrowserName() {
+        var sBrowser, sUsrAg = navigator.userAgent;
+
+        if (sUsrAg.indexOf('Edge') > -1) {
+          sBrowser = 'Edge';
+        } else if(sUsrAg.indexOf('Chrome') > -1) {
+            sBrowser = 'Chrome';
+        } else if (sUsrAg.indexOf('Safari') > -1) {
+            sBrowser = 'Safari';
+        } else if (sUsrAg.indexOf('Opera') > -1) {
+            sBrowser = 'Opera';
+        } else if (sUsrAg.indexOf('Firefox') > -1) {
+            sBrowser = 'Firefox';
+        } else if (sUsrAg.indexOf('MSIE') > -1) {
+            sBrowser = 'IE';
+        } else {
+          sBrowser = 'unknown';
+        }
+
+        return sBrowser;
       }
     });
 
