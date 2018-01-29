@@ -49,6 +49,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
         _configNames: {
           type: Array
+        },
+        selectedName: {
+          type: String,
+          notify: true,
+          computed: '_computeCurrentConfigName(currentConfIndex, _configNames)'
         }
       },
 
@@ -70,6 +75,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _computeCurrentConfig() {
         return this.allConfigs[this.currentConfIndex];
+      },
+
+      _computeCurrentConfigName() {
+        if(this._configNames && this._configNames.length) {
+          return this._configNames[this.currentConfIndex];
+        }
       }
     });
 

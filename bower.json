@@ -20,7 +20,8 @@
     "polymerfire": "^2.2.1",
     "px-alert-message": "^1.2.0",
     "px-dropdown": "^4.4.0",
-    "px-tabs": "^2.1.0"
+    "px-tabs": "^2.1.0",
+    "px-vis-parallel-coordinates": "^3.5.1"
   },
   "devDependencies": {
     "px-theme": "^3.0.0",

@@ -91,7 +91,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <firebase-document
       app-name="benchmark"
       path="polymerVersions"
-      data="{{polymerVersions}}"
+      data="{{_polymerVersions}}"
+    ></firebase-document>
+
+    <firebase-document
+      app-name="benchmark"
+      path="users"
+      data="{{users}}"
     ></firebase-document>
 
     <app-location
@@ -146,14 +152,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             role="main">
           <create-config name="create-config"></create-config>
           <run-benchmark
+            id="benchmark"
             name="run-benchmark"
             user="[[user]]"
             signed-in="[[signedIn]]"
             polymer-versions="{{polymerVersions}}"
+            users="{{users}}"
           ></run-benchmark>
           <compare-results
             name="compare-results"
-            polymer-versions="{{polymerVersions}}"
+            polymer-versions="[[polymerVersions]]"
+            users="[[users]]"
           ></compare-results>
           <!-- <my-view3 name="view3"></my-view3>
           <my-view404 name="view404"></my-view404> -->
@@ -181,12 +190,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         rootPath: String,
         user: Object,
         signedIn: Boolean,
-        polymerVersions: Array
+        _polymerVersions: Array,
+        polymerVersions: {
+          type: Array
+        },
+        users: {
+          type: Object
+        }
       },
 
       observers: [
         '_routePageChanged(routeData.page)',
+        '_computePolymerVersions(_polymerVersions)'
       ],
+
+      listeners: {
+        'polymer-versions-changed': '_updatePolyV'
+      },
+
+      _computePolymerVersions() {
+        if(!Array.isArray(this._polymerVersions)) {
+          this.set('polymerVersions', null);
+        } else {
+          this.set('polymerVersions', this._polymerVersions);
+        }
+      },
+
+      _updatePolyV(e) {
+        debugger
+        this.set('_polymerVersions', e.detail.value);
+      },
 
       login() {
         this.$.auth.signInWithPopup();

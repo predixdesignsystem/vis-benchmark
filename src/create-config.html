@@ -176,7 +176,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.message = 'benchmark ' + this.$.name.value + ' successfully saved';
             this.messageTitle = 'Success';
             this.$.alert.set('visible', true);
-            this.$.dropdownConfig.forceRefetch();
             }.bind(this))
             .catch(function(e) {
             this.messageType = 'important';
@@ -224,7 +223,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.message = 'benchmark ' + this.$.name.value + ' successfully deleted';
             this.messageTitle = 'Success';
             this.$.alert.set('visible', true);
-            this.$.dropdownConfig.forceRefetch();
             }.bind(this))
             .catch(function(e) {
             this.messageType = 'important';

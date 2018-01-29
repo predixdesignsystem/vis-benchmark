@@ -48,7 +48,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <firebase-document
         id="document"
         app-name="benchmark"
-        path="results"
       ></firebase-document>
     </div>
   </template>
@@ -86,7 +85,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           notify: true
         },
         user: Object,
-        signedIn: Boolean
+        signedIn: Boolean,
+        users: {
+          type: Object,
+          notify: true
+        }
       },
 
       observers: [
@@ -128,22 +131,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _uploadResults() {
 
-        let result = [],
+        let result = {
+              benchResult: []
+            },
             current,
-            path = 'results/';
+            path = 'results',
+            user = this.user ? this.user.displayName : 'anonymous';
 
         //create data object
         for(var i=0; i<this.$.benchmark.reportData.length; i++) {
 
           current = {};
-          current.meta = this.$.benchmark.perfResult[i].loopInfo;
-          if(Array.isArray(current.meta.ctx.data.data)) {
-            current.meta.ctx.data = this.$.benchmark.getDatasetSize(current.meta.ctx.data.data);
-          } else {
-            current.meta.ctx.data = current.meta.ctx.data;
-          }
+          current.meta = JSON.parse(JSON.stringify(this.$.benchmark.perfResult[i].loopInfo));
+          current.meta.ctx.data = this.$.benchmark.getDatasetSize(current.meta.ctx.data.data);
           current.timings = this.$.benchmark.reportData[i].tableData;
-          result.push(current);
+          current.totalTime = this.$.benchmark.reportData[i].total;
+          current.averageTimePerChart = this.$.benchmark.reportData[i].average;
+          result.benchResult.push(current);
         }
 
         //add some more info
@@ -152,9 +156,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         result.visVersion = Px.vis.debug.version;
         result.benchmarkName = this.currentConfig.name;
         result.browser = this._getBrowserName();
-        result.userName = this.user ? this.user.displayName : 'anonymous';
+        result.userName = user;
 
-        var newRef = this.$.document.ref.push();
+        //TODO: when we scale that up store on subpath to do smaller gets
+        //path += '/' + result.benchmarkName + '/' + result.user + '/' + result.browser;
+
+        var newRef = firebase.database(this.$.document.app).ref(path).push();
         newRef.set(result, function() {
           this._hasUploaded = true;
 
@@ -164,6 +171,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           } else if(this.polymerVersions.indexOf(result.polymerVersion) === -1) {
             this.push('polymerVersions', result.polymerVersion);
           }
+
+          //if we never used this polymer version before => store it
+          this.users[result.userName] = true;
+          this.notifyPath('users.' + result.userName);
         }.bind(this));
       },
 
