@@ -5,10 +5,10 @@
     "src/compare-results.html",
     "src/run-benchmark.html",
     "src/create-config.html",
-    "bower_components/chimera-table/px-data-grid.html"
+    "bower_components/chimera-table/px-data-table.html"
   ],
   "extraDependencies": [
-    "bower_components/webcomponentsjs/webcomponents-loader.js",
+    "bower_components/webcomponentsjs/webcomponents-lite.js",
     "bower_components/px-theme/px-theme-styles.html",
     "bower_components/px-vis-demos/benchmark_data/40x1k.json",
     "bower_components/px-vis-demos/benchmark_data/4x1k.json",
@@ -17,12 +17,12 @@
   ],
   "builds": [
     {
-      "basePath": "polymer2/es6",
+      "basePath": "polymer1/es6",
       "preset": "es6-unbundled",
       "name": "es6"
     },
     {
-      "basePath": "polymer2/es5",
+      "basePath": "polymer1/es5",
       "preset": "es5-bundled",
       "name": "es5"
     }

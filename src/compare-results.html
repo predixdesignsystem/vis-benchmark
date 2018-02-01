@@ -1,0 +1,432 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/px-tabs/px-tabs.html">
+<link rel="import" href="../bower_components/px-dropdown/px-dropdown.html">
+<link rel="import" href="config-dropdown.html">
+<link rel="import" href="shared-styles.html">
+<!-- whatevs -->
+<link rel="import" href="../css/create-config-styles.html">
+
+<dom-module id="compare-results">
+  <template>
+    <style include="create-config-styles"></style>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <firebase-document
+      id="document"
+      app-name="benchmark"
+      path="browsers/"
+      data="{{browsersList}}"
+      >
+    </firebase-document>
+
+    <div class="card">
+      <h1>Compare benchmark results</h1>
+      <px-tabs selected="{{selectedTab}}">
+        <px-tab>Tab 1</px-tab>
+        <px-tab>Tab 2</px-tab>
+        <px-tab>Tab 3</px-tab>
+      </px-tabs>
+      <iron-pages selected="{{selectedTab}}">
+        <div>
+
+
+          <!-- Use this when we do finer load of benchs into table -->
+          <!-- <div class="flex flex--middle">
+            <span>Benchmark Name: </span>
+            <config-dropdown
+              selected-name="{{selectedConfigName}}">
+            </config-dropdown>
+          </div>
+
+          <div class="flex flex--middle">
+            <span>Polymer Version: </span>
+            <px-dropdown
+              items="[[polymerVersions]]"
+              multi
+              selected-values="{{selectedVersions}}">
+            </px-dropdown>
+          </div>
+          <div class="flex flex--middle">
+            <span>Users: </span>
+            <px-dropdown
+              items="[[_usersName]]"
+              multi
+              selected-values="{{selectedUsers}}">
+            </px-dropdown>
+          </div>
+          <button class="btn btn--primary" on-tap="_loadBenchs">Load benchmarks</button> -->
+          <template is="dom-if" if="[[_isPolymer1]]" restamp>
+            <px-data-table
+              table-data="[[allResults]]"
+              selectable
+              selected-rows="{{selectedBenchs}}">
+              <px-data-table-column label="Benchmark Name" name="benchmarkName" sortable type="string"></px-data-table-column>
+              <px-data-table-column label="Browser" name="browser" sortable type="string"></px-data-table-column>
+              <px-data-table-column label="Polymer Version" name="polymerVersion" sortable type="string"></px-data-table-column>
+              <px-data-table-column label="Vis Version" name="visVersion" sortable type="string"></px-data-table-column>
+              <px-data-table-column label="Timestamp" name="timestamp" sortable type="string"></px-data-table-column>
+              <px-data-table-column label="User Name" name="userName" sortable type="string"></px-data-table-column>
+          </px-data-table>
+          </template>
+
+          <template is="dom-if" if="[[!_isPolymer1]]" restamp>
+            <px-data-grid
+              table-data="[[allResults]]"
+              selection-mode="multi"
+              selected-items="{{selectedBenchs}}"
+              columns="[[gridColumns]]"
+            ></px-data-grid>
+          </template>
+          <div class="flex">
+            <button class$="btn btn--primary [[_compareDisabled(selectedBenchs.*)]]" on-tap="_compare">COMPARE THOSE BENCHES BRUV</button>
+            <span class="u-ml">Criteria for categories: </span>
+            <px-dropdown
+              items='["Timestamp", "Browser", "Polymer version", "Vis version", "User", "Polymer + Browser"]'
+              selected="{{_categoryToUse}}"
+              select-by="val">
+            </px-dropdown>
+          </div>
+
+          <template is="dom-if" if="[[chartOptions]]">
+            <template is="dom-repeat" items="[[chartOptions]]">
+              <span class="heading--page">[[item.title]]</span><br>
+              <span class="heading--section"></span>[[item.description]]<br>
+              <px-vis-parallel-coordinates
+                chart-data="[[item.chartData]]"
+                category-key="category"
+                hard-mute
+                categories="[[item.categories]]"
+                series-key="benchTimestamp"
+                skip-keys='{"category": true}'
+                series-config="[[item.seriesConfig]]"
+                generate-axes-from-data
+                category-register-config='{"truncationLength": 30}'
+                time-domain="[[_timeDomain(item)]]"
+                height="500"
+              ></px-vis-parallel-coordinates>
+            </template>
+          </template>
+        </div>
+        <div>Tab 2 content</div>
+        <div>Tab 3 content</div>
+      </iron-pages>
+
+      <firebase-query
+        id="query"
+        app-name="benchmark"
+        path="results"
+        data="{{allResults}}"
+      ></firebase-query>
+
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'compare-results',
+
+      properties: {
+        selectedTab: {
+          type: Number,
+          value: 0
+        },
+        polymerVersions: {
+          type: Array
+        },
+        configName: {
+          type: String
+        },
+        selectedVersions: {
+          type: Array
+        },
+        selectedUsers: {
+          type: Array
+        },
+        _usersName: {
+          type: Array,
+          computed: '_computeUsersNames(users)'
+        },
+        _isPolymer1: {
+          type: Boolean
+        },
+        allResults: {
+          type: Object
+        },
+        tableData: {
+          type: Array,
+          computed: '_computeTableData(allResults)'
+        },
+        selectedBenchs: {
+          type: Array
+        },
+        _categoryToUse: {
+          type: String,
+          value: 'Timestamp'
+        },
+        gridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'benchmark[string]',
+              name: 'Benchmark Name',
+              path: 'benchmarkName',
+              type: 'string',
+              renderer: 'px-data-grid-string-renderer',
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            },
+            {
+              id: 'browser[string]',
+              name: 'Browser',
+              path: 'browser',
+              type: 'string',
+              renderer: 'px-data-grid-string-renderer',
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            },
+            {
+              id: 'polyver[string]',
+              name: 'Polymer Version',
+              path: 'polymerVersion',
+              type: 'string',
+              renderer: 'px-data-grid-string-renderer',
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            },
+            {
+              id: 'visversion[string]',
+              name: 'Vis Version',
+              path: 'visVersion',
+              type: 'string',
+              renderer: 'px-data-grid-string-renderer',
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            },
+            {
+              id: 'timestamp[date]',
+              name: 'Timestamp',
+              path: 'timestamp',
+              type: 'date',
+              renderer: 'px-data-grid-date-renderer',
+              rendererConfig: {
+                dataFormat: 'x',
+                displayFormat: 'DD-MM-YYYY HH:mm'
+              },
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            },
+            {
+              id: 'username[string]',
+              name: 'User Name',
+              path: 'userName',
+              type: 'string',
+              renderer: 'px-data-grid-string-renderer',
+              minBound: 1,
+              maxBound: 10,
+              hidden: false,
+              frozen: false,
+              required: false,
+              flexGrow: 1
+            }];
+          }
+        }
+      },
+
+      ready: function() {
+        this.set('_isPolymer1', !Polymer.Element);
+        if(this._isPolymer1) {
+          Polymer.Base.importHref(Polymer.ResolveUrl.resolveUrl('bower_components/chimera-table/px-data-table.html',''))
+        } else {
+          Polymer.importHref(Polymer.ResolveUrl.resolveUrl('bower_components/chimera-table/px-data-grid.html',''))
+        }
+      },
+
+      _computeUsersNames() {
+        return Object.keys(this.users);
+      },
+
+      _computeTableData() {
+        var keys,
+            result = [],
+            newObj;
+
+        for(var i=0; i<this.allResults.length; i++) {
+
+          keys = Object.keys(this.allResults[i]);
+          newObj = {};
+          for(var j=0; j<keys.length; j++) {
+
+            if(keys[j] !== '$key' && isNaN(parseFloat(keys[j]))) {
+              newObj[keys[j]] = this.allResults[i][keys[j]];
+            }
+          }
+          result.push(newObj);
+        }
+
+        return result;
+      },
+
+      _compareDisabled() {
+        if(this.selectedBenchs && this.selectedBenchs.length > 0) {
+          return '';
+        } else {
+          return 'btn--disabled';
+        }
+      },
+
+      _normalizeData() {
+        if(this._isPolymer1) {
+          var normalized = this.selectedBenchs.map(function(item) {return item.row});
+
+          normalized.forEach(function(item) {
+            item.benchResult = item.benchResult.value;
+          });
+        } else {
+          return this.selectedBenchs;
+        }
+      },
+
+      _compare() {
+        var options = [],
+            option = {},
+            data = [],
+            newDataPoint,
+            keys,
+            categories = [],
+            optionExists,
+            selected,
+            newKey,
+            cat;
+
+        selected = this._normalizeData();
+
+        selected.forEach(function(item) {
+
+          item.benchResult.forEach(function(benchResult, index) {
+
+            optionExists = !!options[index];
+            option = optionExists ? options[index] : {};
+            categories = optionExists ? option.categories : [];
+            data = optionExists ? option.chartData : [];
+
+            cat = this._getCategoryItem(item);
+
+            if(!this.disableCategories && categories.indexOf(cat) === -1) {
+              categories.push(cat);
+            }
+
+            this._generateChartDataFromBenchResult(benchResult, data, cat, item.timestamp);
+
+            option.categories = categories;
+            option.chartData = data;
+            option.title = benchResult.meta.ctx.title;
+            option.description = benchResult.meta.ctx.description;
+            option.seriesConfig = this._buildSeriesConfig(categories);
+
+            if(!optionExists) {
+              options.push(option);
+            }
+          }.bind(this));
+        }.bind(this));
+
+        this.set('chartOptions', options);
+      },
+
+      _generateChartDataFromBenchResult(benchResult, data, category, timeStamp) {
+
+        var keys = Object.keys(benchResult.timings[0]);
+
+        benchResult.timings.forEach(function(timing) {
+
+          if(timing.name === 'Average') {
+            newDataPoint = {};
+            newDataPoint.benchTimestamp = timeStamp;
+            newDataPoint.category = category;
+            newDataPoint.chartTotalTimeAverage = benchResult.averageTimePerChart;
+
+            for(var i=0; i<keys.length; i++) {
+
+              if(keys[i] !== 'name') {
+                newKey = keys[i].replace(' ', '_').replace('.', 'dot').replace('(', '_').replace(')', '_');
+                newDataPoint[newKey] = Number(timing[keys[i]]);
+              }
+            }
+            data.push(newDataPoint);
+          }
+        });
+      },
+
+      _getCategoryItem(item) {
+
+        if(this._categoryToUse === 'Polymer version') {
+          return item.polymerVersion;
+        } else if(this._categoryToUse === 'Browser') {
+          return item.browser;
+        } else if(this._categoryToUse === 'Vis version') {
+          return item.visVersion;
+        } else if(this._categoryToUse === 'User') {
+          return item.userName;
+        } else if(this._categoryToUse === 'Timestamp') {
+          return item.timestamp;
+        } else if(this._categoryToUse === 'Polymer + Browser') {
+          return item.browser + ' ' + item.polymerVersion;
+        }
+      },
+
+      _timeDomain() {
+        return {x: [0, Number(new Date())]};
+      },
+
+      _buildSeriesConfig(categories) {
+
+        //override categorie names so we don't get the 'category - ' bit of the string
+        var config = {};
+        categories.forEach(function(cat) {
+          config[cat.toString()] = {
+            name: this._categoryToUse === 'Timestamp' ? window.Px.moment(cat).format('DD-MM-YYYY HH:mm') : cat.toString() + ' '
+          };
+        }.bind(this));
+
+        return config;
+      }
+    });
+  </script>
+</dom-module>

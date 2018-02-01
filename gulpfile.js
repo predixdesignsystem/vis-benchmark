@@ -15,6 +15,7 @@ const babel = require('gulp-babel');
 const rename = require('gulp-rename');
 const sourcemaps = require('gulp-sourcemaps');
 const cache = require('gulp-cached');
+const clean = require('gulp-clean');
 
 const sassOptions = {
   importer: importOnce,
@@ -83,6 +84,13 @@ gulp.task('transpile', function() {
 gulp.task('watch', function() {
  // gulp.watch(ES6_SRC, ['transpile']);
   gulp.watch(['sass/*.scss'], ['sass']);
+});
+
+gulp.task('deploy', function() {
+
+
+  gulp.src(['css/**/*', 'src/**/*', 'images/**/*', 'bower_components/**/*'], { "base" : "." }).pipe(gulp.dest('dist'));
+
 });
 
 gulp.task('default', function(callback) {
