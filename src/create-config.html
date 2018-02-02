@@ -141,11 +141,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.text.value = JSON.stringify(this.newConfig, null, 2);
       },
 
-      _dummy() {
-        console.log('dummy')
-      },
-
-      async save() {
+      save() {
         var name = this.$.name.value,
             benchConf;
 
@@ -156,11 +152,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           if(benchConf.default) {
 
              //make all other configs non default
-            await this._resetDefaultStateInDb();
+            this._resetDefaultStateInDb().then( () => this._saveConfInDb(benchConf));
+          } else {
+            this._saveConfInDb(benchConf);
           }
-
-          this._saveConfInDb(benchConf);
-
         } else {
           this.messageType = 'important';
           this.message = 'please fill in "Name"';
@@ -185,16 +180,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }.bind(this));
       },
 
-      async _resetDefaultStateInDb() {
+      _resetDefaultStateInDb() {
 
-        var configs = await this.$.document.getStoredValue('configs'),
-            keys = Object.keys(configs);
+        return this.$.document.getStoredValue('configs')
+          .then(function(configs) {
+            var keys = Object.keys(configs);
 
-        for(var i=0; i<keys.length; i++) {
-          configs[keys[i]].default = false;
-        }
+            for(var i=0; i<keys.length; i++) {
+              configs[keys[i]].default = false;
+            }
 
-        await this.$.document.setStoredValue('configs', configs);
+            return this.$.document.setStoredValue('configs', configs);
+          }.bind(this));
       },
 
       _createConfig() {

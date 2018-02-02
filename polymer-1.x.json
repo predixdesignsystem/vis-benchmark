@@ -5,7 +5,8 @@
     "src/compare-results.html",
     "src/run-benchmark.html",
     "src/create-config.html",
-    "bower_components/chimera-table/px-data-table.html"
+    "bower_components/chimera-table/px-data-table.html",
+    "bower_components/px-theme/px-theme-styles.html"
   ],
   "extraDependencies": [
     "bower_components/webcomponentsjs/webcomponents-lite.js",
@@ -13,7 +14,8 @@
     "bower_components/px-vis-demos/benchmark_data/40x1k.json",
     "bower_components/px-vis-demos/benchmark_data/4x1k.json",
     "bower_components/px-vis-demos/benchmark_data/40x10k.json",
-    "bower_components/px-vis-demos/benchmark_data/4x10k.json"
+    "bower_components/px-vis-demos/benchmark_data/4x10k.json",
+    "images/**"
   ],
   "builds": [
     {
@@ -22,9 +24,21 @@
       "name": "es6"
     },
     {
-      "basePath": "polymer1/es5",
-      "preset": "es5-bundled",
-      "name": "es5"
+      "name": "es5",
+      "js": {
+        "minify": false,
+        "compile": true
+      },
+      "css": {
+        "minify": true
+      },
+      "html": {
+        "minify": true
+      },
+      "bundle": false,
+      "addServiceWorker": false,
+      "addPushManifest": true,
+      "basePath": "polymer1/es5"
     }
   ]
 }
