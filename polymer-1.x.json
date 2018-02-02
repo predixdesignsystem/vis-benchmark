@@ -24,21 +24,10 @@
       "name": "es6"
     },
     {
-      "name": "es5",
-      "js": {
-        "minify": false,
-        "compile": true
-      },
-      "css": {
-        "minify": true
-      },
-      "html": {
-        "minify": true
-      },
+      "basePath": "polymer2/es5",
+      "preset": "es5-bundled",
       "bundle": false,
-      "addServiceWorker": false,
-      "addPushManifest": true,
-      "basePath": "polymer1/es5"
+      "name": "es5"
     }
   ]
 }

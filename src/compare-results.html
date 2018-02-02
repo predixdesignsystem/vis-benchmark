@@ -91,12 +91,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <px-data-grid
               table-data="[[allResults]]"
               selection-mode="multi"
+              filterable
               selected-items="{{selectedBenchs}}"
               columns="[[gridColumns]]"
             ></px-data-grid>
           </template>
           <div class="flex">
-            <button class$="btn btn--primary [[_compareDisabled(selectedBenchs.*)]]" on-tap="_compare">COMPARE THOSE BENCHES BRUV</button>
+            <button class$="btn btn--primary [[_compareDisabled(selectedBenchs.*)]]" on-tap="_compare">Compare benchmark results</button>
             <span class="u-ml">Criteria for categories: </span>
             <px-dropdown
               items='["Timestamp", "Browser", "Polymer version", "Vis version", "User", "Polymer + Browser"]'

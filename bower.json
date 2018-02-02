@@ -16,7 +16,7 @@
     "px-vis-demos": "^1.4.2",
     "polymer": "^2.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
-    "chimera-table": "vaadin/px-data-grid#^1.1.0",
+    "chimera-table": "vaadin/px-data-grid#1.1.7",
     "polymerfire": "^2.2.1",
     "px-alert-message": "^1.2.0",
     "px-dropdown": "^4.4.0",
