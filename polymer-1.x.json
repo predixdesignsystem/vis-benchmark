@@ -24,7 +24,7 @@
       "name": "es6"
     },
     {
-      "basePath": "polymer2/es5",
+      "basePath": "polymer1/es5",
       "preset": "es5-bundled",
       "bundle": false,
       "name": "es5"

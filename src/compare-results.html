@@ -110,19 +110,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-repeat" items="[[chartOptions]]">
               <span class="heading--page">[[item.title]]</span><br>
               <span class="heading--section"></span>[[item.description]]<br>
-              <px-vis-parallel-coordinates
-                chart-data="[[item.chartData]]"
-                category-key="category"
-                hard-mute
-                categories="[[item.categories]]"
-                series-key="benchTimestamp"
-                skip-keys='{"category": true}'
-                series-config="[[item.seriesConfig]]"
-                generate-axes-from-data
-                category-register-config='{"truncationLength": 30}'
-                time-domain="[[_timeDomain(item)]]"
-                height="500"
-              ></px-vis-parallel-coordinates>
+              <br>
+              <div style="height: 500px">
+                <px-vis-parallel-coordinates
+                  chart-data="[[item.chartData]]"
+                  category-key="category"
+                  hard-mute
+                  categories="[[item.categories]]"
+                  series-key="benchTimestamp"
+                  skip-keys='{"category": true}'
+                  series-config="[[item.seriesConfig]]"
+                  generate-axes-from-data
+                  category-register-config='{"truncationLength": 30}'
+                  time-domain="[[_timeDomain(item)]]"
+                ></px-vis-parallel-coordinates>
+              </div>
             </template>
           </template>
         </div>
