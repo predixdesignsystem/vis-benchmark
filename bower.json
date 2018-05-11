@@ -13,15 +13,15 @@
     "iron-pages": "PolymerElements/iron-pages#^2.0.0",
     "iron-selector": "PolymerElements/iron-selector#^2.0.0",
     "paper-icon-button": "PolymerElements/paper-icon-button#^2.0.0",
-    "px-vis-demos": "^1.4.2",
+    "px-vis-demos": "^1.6.0",
     "polymer": "^2.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
-    "chimera-table": "vaadin/px-data-grid#^1.1.7",
+    "chimera-table": "predixdesignsystem/px-data-grid#^1.0.0",
     "polymerfire": "^2.2.1",
     "px-alert-message": "^1.2.0",
     "px-dropdown": "^4.4.0",
     "px-tabs": "^2.1.0",
-    "px-vis-parallel-coordinates": "^3.5.1"
+    "px-vis-parallel-coordinates": "^4.0.0"
   },
   "devDependencies": {
     "px-theme": "^3.0.0",
